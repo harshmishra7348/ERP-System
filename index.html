@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance ERP - Student & Teacher Portal</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="container row">
+      <div class="logo">
+        <div class="mark">UGI</div>
+        <div>UGIverse <span class="pill">Attendance ERP</span></div>
+      </div>
+      <div class="row">
+        <button class="btn ghost" id="navHomeBtn">Home</button>
+        <button class="btn ghost hide" id="navLogoutBtn">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- AUTH -->
+  <main class="auth-wrap" id="authPage">
+    <div class="auth">
+      <div class="illustration card">
+        <h1>Student & Teacher Portal</h1>
+        <p>Developed by <strong>UGIverse</strong></p> <p> Your whole college universe in one website </p>
+        <div style="height:16px"></div>
+        <div class="grid cols-2">
+          <div class="stat">
+            <div class="big" id="statStudents">0</div>
+            <div class="muted">Students</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="statClasses">0</div>
+            <div class="muted">Classes</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="statToday">0%</div>
+            <div class="muted">Today Present</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="statRecords">0</div>
+            <div class="muted">Attendance Records</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <h2 style="margin:0 0 16px 0">Login</h2>
+
+        <!-- Role selector buttons -->
+        <div class="role-selector">
+          <button class="role-btn" id="roleAdminBtn" data-role="admin" onclick="selectRole('admin')">
+            <span class="role-icon">🛡️</span>
+            <span class="role-label">Admin</span>
+            <span class="role-sub">Jitendra Kumar</span>
+          </button>
+          <button class="role-btn active" id="roleTeacherBtn" data-role="teacher" onclick="selectRole('teacher')">
+            <span class="role-icon">👨‍🏫</span>
+            <span class="role-label">Teacher</span>
+            <span class="role-sub">Staff login</span>
+          </button>
+          <button class="role-btn" id="roleStudentBtn" data-role="student" onclick="selectRole('student')">
+            <span class="role-icon">🧑‍🎓</span>
+            <span class="role-label">Student</span>
+            <span class="role-sub">Student login</span>
+          </button>
+        </div>
+
+        <!-- Hidden radio inputs kept for JS compatibility -->
+        <input type="radio" name="role" value="teacher" id="radioTeacher" checked style="display:none">
+        <input type="radio" name="role" value="student" id="radioStudent" style="display:none">
+
+        <div class="grid" style="margin-top:16px">
+          <div class="field">
+            <label id="loginIdLabel">Email / ID</label>
+            <input class="input" id="loginId" placeholder="Jitendra Kumar" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <div class="row" style="width:100%">
+              <input class="input" id="loginPass" type="password" placeholder="teacher123" style="flex:1" />
+              <button class="btn small" id="togglePass" type="button">Show</button>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="loginBtn" style="width:100%">Sign in</button>
+          </div>
+          <div id="loginMsg" style="color:var(--warning); text-align:center; min-height:18px; font-size:.9rem;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DASHBOARD -->
+  <section class="container dash hide" id="dash">
+    <aside class="side card pad">
+      <div class="row" style="justify-content:space-between">
+        <div id="userName" style="font-weight:800">User</div>
+        <div class="pill" id="userRole">teacher</div>
+      </div>
+      <div class="nav" id="nav">
+        <!-- Teacher / Admin shared nav items -->
+        <div class="item active" data-target="teacherHome" id="navTeacherHome">Overview</div>
+        <div class="item" data-target="manageStudents" id="navManageStudents">Students</div>
+        <div class="item" data-target="takeAttendance" id="navTakeAttendance">Take Attendance</div>
+        <div class="item" data-target="feeMonitoring" id="navFeeMonitoring">Fee Monitoring</div>
+        <div class="item" data-target="reports" id="navReports">Reports</div>
+
+        <!-- Admin-only nav item -->
+        <div class="item hide" data-target="manageTeachers" id="navManageTeachers">Manage Teachers</div>
+
+        <!-- Student nav items -->
+        <div class="item hide" data-target="studentHome" id="navStudentHome">My Attendance</div>
+        <div class="item hide" data-target="studentFees" id="navStudentFees">My Fees</div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn small right" id="logoutBtn">Logout</button>
+      </div>
+    </aside>
+
+    <main class="section">
+      <!-- TEACHER OVERVIEW -->
+      <div id="teacherHome" class="card pad">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Overview</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Quick stats for today: <span id="todayDate"></span></p>
+          </div>
+          <div class="row">
+            <button class="btn" id="seedBtn">Reset Demo Data</button>
+            <button class="btn primary hide" id="quickTakeBtn">Quick Take</button>
+          </div>
+        </div>
+        <div class="stats" style="margin-top:14px">
+          <div class="stat">
+            <div class="big" id="tStatStudents">0</div>
+            <div>Students</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="tStatClasses">0</div>
+            <div>Classes</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="tStatPresent">0%</div>
+            <div>Present Today</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="tStatRecords">0</div>
+            <div>Total Records</div>
+          </div>
+        </div>
+        <!-- Admin extra stat row -->
+        <div class="stats hide" style="margin-top:12px" id="adminExtraStats">
+          <div class="stat">
+            <div class="big" id="tStatTeachers">0</div>
+            <div>Teachers</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAGE STUDENTS -->
+      <div id="manageStudents" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Students</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Add, edit or remove students. Students can log in with their ID and password.</p>
+          </div>
+          <div class="row">
+            <input class="input" id="studentSearch" placeholder="Search by name, roll or class" />
+            <button class="btn" id="exportStudentsBtn">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="margin-top:12px">
+          <div class="field">
+            <label>Full Name</label>
+            <input class="input" id="sName" placeholder="Enter Student Name" />
+          </div>
+          <div class="field">
+            <label>Roll No.</label>
+            <input class="input" id="sRoll" placeholder="Enter Roll No" />
+          </div>
+          <div class="field">
+            <label>Class</label>
+            <select class="input" id="sClass">
+              <option value="">Select Class</option>
+              <option value="BBA">BBA</option>
+              <option value="BTECH">BTECH</option>
+              <option value="BCA">BCA</option>
+              <option value="BA">BA</option>
+              <option value="BCOM">BCOM</option>
+              <option value="BSC">BSC</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input class="input" id="sEmail" placeholder="Enter email" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input class="input" id="sPass" placeholder="Set a password" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn success" id="addStudentBtn">Add Student</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Roll</th>
+                <th>Class</th>
+                <th>Email</th>
+                <th>ID</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAKE ATTENDANCE -->
+      <div id="takeAttendance" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Take Attendance</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Select the date and mark students as Present/Absent.</p>
+          </div>
+          <div class="row">
+            <input class="input" id="attDate" type="date" />
+            <button class="btn" id="markAllPresentBtn">Mark All Present</button>
+            <button class="btn" id="clearMarksBtn">Clear</button>
+            <button class="btn primary" id="saveAttendanceBtn">Save</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <select id="classFilter" class="input" style="max-width:220px">
+            <option value="">All Classes</option>
+          </select>
+          <input class="input" id="attSearch" placeholder="Filter by name / roll" />
+        </div>
+
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Roll</th>
+                <th>Class</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FEE MONITORING (Teacher) -->
+      <div id="feeMonitoring" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Fee Monitoring</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Manage student fees, record payments, and generate reports.</p>
+          </div>
+          <div class="row">
+            <button class="btn" id="addFeeRecordBtn">Add Fee Record</button>
+            <button class="btn primary" id="generateFeeReportBtn">Generate Report</button>
+          </div>
+        </div>
+
+        <div id="addFeeModal" class="card hide" style="margin-top:16px; padding:20px">
+          <div class="row" style="justify-content:space-between; align-items:center">
+            <h3 style="margin:0">Add Fee Record</h3>
+            <button class="btn ghost" id="closeFeeModal">✕</button>
+          </div>
+          <div class="grid cols-2" style="margin-top:12px; gap:12px">
+            <div class="field">
+              <label>Student</label>
+              <select class="input" id="feeStudentSelect">
+                <option value="">Select Student</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fee Type</label>
+              <select class="input" id="feeType">
+                <option value="Tuition">Tuition Fee</option>
+                <option value="Library">Library Fee</option>
+                <option value="Lab">Lab Fee</option>
+                <option value="Exam">Exam Fee</option>
+                <option value="Hostel">Hostel Fee</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Amount (₹)</label>
+              <input class="input" id="feeAmount" type="number" placeholder="5000" />
+            </div>
+            <div class="field">
+              <label>Due Date</label>
+              <input class="input" id="feeDueDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Academic Year</label>
+              <input class="input" id="feeAcademicYear" value="2024-25" />
+            </div>
+            <div class="field">
+              <label>Semester</label>
+              <select class="input" id="feeSemester">
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <option value="Semester 5">Semester 5</option>
+                <option value="Semester 6">Semester 6</option>
+                <option value="Semester 7">Semester 7</option>
+                <option value="Semester 8">Semester 8</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select class="input" id="feeStatus">
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Partial">Partial Payment</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Paid Amount (₹)</label>
+              <input class="input" id="feePaidAmount" type="number" placeholder="0" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label>Notes (Optional)</label>
+              <textarea class="input" id="feeNotes" rows="2" placeholder="Additional notes..."></textarea>
+            </div>
+          </div>
+          <div class="row" style="margin-top:16px; justify-content:flex-end; gap:12px">
+            <button class="btn" id="cancelFeeBtn">Cancel</button>
+            <button class="btn success" id="saveFeeBtn">Save Fee Record</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <select class="input" id="feeClassFilter" style="max-width:220px">
+            <option value="">All Classes</option>
+          </select>
+          <select class="input" id="feeStatusFilter">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Partial">Partial</option>
+          </select>
+          <input class="input" id="feeSearch" placeholder="Search by student name/roll" />
+        </div>
+
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Class</th>
+                <th>Fee Type</th>
+                <th>Total Amount</th>
+                <th>Paid</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="feeTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAYMENT MODAL -->
+      <div id="paymentModal" class="modal-overlay hide">
+        <div class="card" style="max-width:500px; width:90%; max-height:90vh; overflow-y:auto;">
+          <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:20px">
+            <h3 style="margin:0">Record Payment</h3>
+            <button class="btn ghost" id="closePaymentModal">✕</button>
+          </div>
+          
+          <div class="field">
+            <label>Student</label>
+            <input class="input" id="paymentStudent" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Fee Type</label>
+            <input class="input" id="paymentFeeType" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Total Amount</label>
+            <input class="input" id="paymentTotalAmount" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Already Paid</label>
+            <input class="input" id="paymentAlreadyPaid" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Due Amount</label>
+            <input class="input" id="paymentDueAmount" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Payment Amount (₹)</label>
+            <input class="input" id="paymentAmount" type="number" placeholder="Enter amount" />
+          </div>
+          
+          <div class="field">
+            <label>Payment Method</label>
+            <div class="payment-methods">
+              <div class="payment-method" data-method="cash">
+                <div>Cash</div>
+              </div>
+              <div class="payment-method" data-method="card">
+                <div>Card</div>
+              </div>
+              <div class="payment-method" data-method="online">
+                <div>Online</div>
+              </div>
+              <div class="payment-method" data-method="upi">
+                <div>UPI</div>
+              </div>
+              <div class="payment-method" data-method="cheque">
+                <div>Cheque</div>
+              </div>
+              <div class="payment-method" data-method="bank_transfer">
+                <div>Bank Transfer</div>
+              </div>
+            </div>
+            <input type="hidden" id="paymentMethod" value="" />
+          </div>
+          
+          <div class="field">
+            <label>Payment Date</label>
+            <input class="input" id="paymentDate" type="date" />
+          </div>
+          
+          <div class="field">
+            <label>Transaction/Reference No </label>
+            <input class="input" id="paymentReference" placeholder="Enter transaction/reference number" />
+          </div>
+          
+          <div class="field">
+            <label>Notes (Optional)</label>
+            <textarea class="input" id="paymentNotes" rows="2" placeholder="Any additional notes..."></textarea>
+          </div>
+          
+          <div class="row" style="margin-top:20px; justify-content:flex-end; gap:12px">
+            <button class="btn" id="cancelPaymentBtn">Cancel</button>
+            <button class="btn success" id="savePaymentBtn">Record Payment</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="reports" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Reports</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Download attendance or view per-student summaries.</p>
+          </div>
+          <div class="row">
+            <input type="month" class="input" id="repMonth">
+            <button class="btn" id="exportAttendanceBtn">Export CSV</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Roll</th>
+                <th>Class</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody id="repTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MANAGE TEACHERS (Admin only) -->
+      <div id="manageTeachers" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">Manage Teachers</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Add, edit or remove teacher accounts.</p>
+          </div>
+          <div class="row">
+            <input class="input" id="teacherSearch" placeholder="Search by name or email" />
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="margin-top:12px">
+          <div class="field">
+            <label>Full Name</label>
+            <input class="input" id="tName" placeholder="Enter Teacher Name" />
+          </div>
+          <div class="field">
+            <label>Email / Login ID</label>
+            <input class="input" id="tEmail" placeholder="Enter email or login name" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input class="input" id="tPass" placeholder="Set a password" />
+          </div>
+          <div class="field" style="grid-column: span 3">
+            <button class="btn success" id="addTeacherBtn" style="width:fit-content">Add Teacher</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email / Login ID</th>
+                <th>ID</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teachersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STUDENT HOME -->
+      <div id="studentHome" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">My Attendance</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">Welcome, <span id="stuWelcome"></span> - your attendance overview.</p>
+          </div>
+          <div class="row">
+            <input type="month" id="stuMonth" class="input">
+            <button class="btn" id="stuExportBtn">Export My CSV</button>
+          </div>
+        </div>
+
+        <div class="stats" style="margin-top:14px">
+          <div class="stat">
+            <div class="big" id="stuPresent">0</div>
+            <div>Present</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuAbsent">0</div>
+            <div>Absent</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuPercent">0%</div>
+            <div>Percentage</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuStreak">0</div>
+            <div>Current Streak (days)</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="stuTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STUDENT FEES (Student View) -->
+      <div id="studentFees" class="card pad hide">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin:0">My Fee Status</h2>
+            <p style="margin:6px 0 0 0; color:var(--muted)">View your fee details and payment history.</p>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="downloadFeeReceiptBtn">Download Receipt</button>
+          </div>
+        </div>
+
+        <div class="stats" style="margin-top:14px">
+          <div class="stat">
+            <div class="big" id="stuTotalFees">₹0</div>
+            <div>Total Fees</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuPaidFees">₹0</div>
+            <div>Paid Amount</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuDueFees">₹0</div>
+            <div>Due Amount</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="stuPendingCount">0</div>
+            <div>Pending Fees</div>
+          </div>
+        </div>
+
+        <div class="tabs" style="margin-top:20px">
+          <div class="tab active" data-tab="current">Current Fees</div>
+          <div class="tab" data-tab="history">Payment History</div>
+          <div class="tab" data-tab="pay">Pay Fees</div>
+        </div>
+
+        <!-- Current Fees Table -->
+        <div id="currentFeesTable" class="card" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Fee Type</th>
+                <th>Academic Year</th>
+                <th>Semester</th>
+                <th>Total Amount</th>
+                <th>Paid Amount</th>
+                <th>Due Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="stuFeeTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Payment History Table -->
+        <div id="paymentHistoryTable" class="card hide" style="padding:0; margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Fee Type</th>
+                <th>Amount Paid</th>
+                <th>Payment Mode</th>
+                <th>Receipt No</th>
+                <th>Reference No</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="stuPaymentTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Pay Fees Section -->
+        <div id="payFeesTable" class="card pad hide" style="margin-top:12px">
+          <h3 style="margin:0 0 16px 0">Pay Pending Fees</h3>
+          <div id="payFeesList"></div>
+          <div class="row" style="margin-top:20px; justify-content:flex-end">
+            <button class="btn primary" id="proceedToPaymentBtn">Proceed to Payment</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+          
+  <!-- Payment Processing Modal -->
+  <div id="paymentProcessingModal" class="modal-overlay hide">
+    <div class="card" style="max-width:500px; width:90%; max-height:90vh; overflow-y:auto;">
+      <h2 style="margin:0 0 20px 0; text-align:center">Payment Processing</h2>
+      
+      <div id="paymentProcessingContent">
+        <div class="field">
+          <label>Choose Payment Method</label>
+          <div class="payment-methods" style="margin-bottom:20px">
+            <div class="payment-method" data-method="card">
+              <div style="font-size:32px; margin-bottom:8px"></div>
+              <div>Card</div>
+            </div>
+            <div class="payment-method" data-method="online">
+              <div style="font-size:32px; margin-bottom:8px"></div>
+              <div>Online</div>
+            </div>
+            <div class="payment-method" data-method="upi">
+              <div style="font-size:32px; margin-bottom:8px"></div>
+              <div>UPI</div>
+            </div>
+            <div class="payment-method" data-method="bank_transfer">
+              <div style="font-size:32px; margin-bottom:8px"></div>
+              <div>Bank Transfer</div>
+            </div>
+          </div>
+          <input type="hidden" id="selectedPaymentMethod" value="" />
+        </div>
+        
+        <div class="field">
+          <label>Total Amount to Pay</label>
+          <input class="input" id="totalPaymentAmount" readonly style="font-size:24px; font-weight:bold; text-align:center" />
+        </div>
+        
+        <!-- Card Payment Form -->
+        <div id="cardPaymentForm" class="hide">
+          <h3 style="margin:16px 0 12px 0">Card Details</h3>
+          <div class="field">
+            <label>Card Number</label>
+            <input class="input" id="cardNumber" placeholder="1234 5678 9012 3456" />
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label>Expiry Date</label>
+              <input class="input" id="cardExpiry" placeholder="MM/YY" />
+            </div>
+            <div class="field">
+              <label>CVV</label>
+              <input class="input" id="cardCVV" type="password" placeholder="123" maxlength="3" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Card Holder Name</label>
+            <input class="input" id="cardHolderName" placeholder="John Doe" />
+          </div>
+        </div>
+        
+        <!-- UPI Payment Form -->
+        <div id="upiPaymentForm" class="hide">
+          <h3 style="margin:16px 0 12px 0">UPI Payment</h3>
+          <div class="field">
+            <label>UPI ID</label>
+            <input class="input" id="upiId" placeholder="yourname@upi" />
+          </div>
+          <div style="text-align:center; margin:20px 0">
+            <p>Scan the QR code to pay</p>
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; display:inline-block; margin:10px 0">
+              <div style="width:150px; height:150px; background:#ddd; margin:0 auto; display:grid; place-items:center; border-radius:8px">
+                <div style="font-size:14px; color:#666">QR Code</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Online Banking Form -->
+        <div id="onlineBankingForm" class="hide">
+          <h3 style="margin:16px 0 12px 0">Online Banking</h3>
+          <div class="field">
+            <label>Select Bank</label>
+            <select class="input" id="bankSelect">
+              <option value="">Select your bank</option>
+              <option value="sbi">State Bank of India</option>
+              <option value="hdfc">HDFC Bank</option>
+              <option value="icici">ICICI Bank</option>
+              <option value="axis">Axis Bank</option>
+              <option value="kotak">Kotak Mahindra Bank</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Bank Transfer Form -->
+        <div id="bankTransferForm" class="hide">
+          <h3 style="margin:16px 0 12px 0">Bank Transfer Details</h3>
+          <div class="field">
+            <label>Account Name</label>
+            <input class="input" value="UGIverse University" readonly />
+          </div>
+          <div class="field">
+            <label>Account Number</label>
+            <input class="input" value="123456789012" readonly />
+          </div>
+          <div class="field">
+            <label>IFSC Code</label>
+            <input class="input" value="SBIN0001234" readonly />
+          </div>
+          <div class="field">
+            <label>Bank Name</label>
+            <input class="input" value="State Bank of India" readonly />
+          </div>
+          <div class="field">
+            <label>Branch</label>
+            <input class="input" value="Main Branch, Delhi" readonly />
+          </div>
+        </div>
+        
+        <div class="field hide" id="paymentSuccessMessage">
+          <div style="background:#d1fae5; color:#047857; padding:24px; border-radius:12px; text-align:center">
+            <div style="font-size:48px; margin-bottom:10px">✓</div>
+            <h3 style="margin:0 0 8px 0">Payment Successful!</h3>
+            <p>Your payment of ₹<span id="paidAmountSuccess"></span> has been processed successfully.</p>
+            <p>Transaction ID: <strong id="transactionId"></strong></p>
+            <p>Receipt No: <strong id="receiptNumber"></strong></p>
+            <div style="margin-top:16px">
+              <button class="btn small" id="printReceiptBtn">Print Receipt</button>
+              <button class="btn small" id="closeSuccessBtn">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row" style="margin-top:20px; justify-content:flex-end; gap:12px">
+        <button class="btn" id="cancelProcessingBtn">Cancel</button>
+        <button class="btn success" id="confirmPaymentBtn">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- External JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
